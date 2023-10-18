@@ -2,18 +2,27 @@
 import SwiftUI
 
 struct ImcView: View {
-    @StateObject var viewModel = ImcViewModel()
+    @StateObject var viewModel = ImcViewModel(color: .indigo)
     @State var title = "Calcule seu IMC"
+    @State var activate = false
+    @State var changeText = false
     
     var body: some View {
         VStack {
             
             Spacer()
             
-            Text(title)
-                .font(.system(size: 33))
-                .bold()
-                .padding(.bottom, 50)
+            VStack(spacing: 10) {
+                Text(changeText ? viewModel.message : title)
+                    .font(.system(size: 33))
+                    .bold()
+                    .foregroundStyle(viewModel.color)
+                Text("\(viewModel.stringResult)")
+                    .font(.system(size: 22))
+                    .foregroundStyle(.secondary)
+                    .bold()
+            }
+            .padding(.bottom, 40)
             
             TextField("Peso", text: $viewModel.weight)
                 .padding(.horizontal)
@@ -37,26 +46,34 @@ struct ImcView: View {
                 viewModel.calculate()
                 viewModel.verify()
                 
-                title = viewModel.message
+                activate = true
                 
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
+                    activate = false
+                    changeText = true
+                }
                 
-                print(viewModel.result)
-                
-                print(viewModel.message)
             } label: {
-                ZStack {
-                    RoundedRectangle(cornerSize: CGSize(width: 8, height: 8))
-                        .fill(viewModel.weight.isEmpty || viewModel.height.isEmpty ? .indigo.opacity(0.5) : .indigo)
-                        .frame(width: 360, height: 60)
+                if activate {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                        .background(.indigo)
+                        .foregroundStyle(.white)
+                        .clipShape(.rect(cornerRadius: 8))
+                } else {
                     Text("Enviar")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
                         .font(.system(size: 17))
+                        .background(.indigo)
                         .foregroundStyle(.white)
                         .bold()
+                        .clipShape(.rect(cornerRadius: 8))
                 }
             }
             .disabled(viewModel.weight.isEmpty || viewModel.height.isEmpty)
             .padding(.top, 40)
-
             
             Spacer()
         }
